@@ -5,13 +5,18 @@
  * chatserver.h
  */
 
+#pragma once
+
 #include "../network_utils/network_utils.h"
 
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <vector>
+#include <string>
 #include <iostream>
 #include <fstream>
+#include <unordered_map>
 #include <unistd.h>
 #include <stdlib.h>
 
@@ -25,6 +30,19 @@
 #include <pthread.h>
 
 #define BACKLOG 1
+
+class ClientMap {
+    private:
+        std::unordered_map<std::string, int> clients;
+        pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+    public:
+        ClientMap();
+        void set(std::string username, int sockfd);
+        int get(std::string username);
+        std::vector list_clients();
+}
+
 
 /* server set up */
 int socket_bind_listen(int port);
