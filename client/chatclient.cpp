@@ -48,10 +48,8 @@ int main(int argc, char* argv[])
     int port;
     char *host;
     char *username;
-    char buf[BUFSIZ];
     bool running = true;
-    // Operation op;
-    std::vector<std::string> command_arguments;
+    std::string input;
 
     if (argc != 4)
     {
@@ -67,9 +65,8 @@ int main(int argc, char* argv[])
     }
 
     while (running) {
-        // TODO: handle arguments
-
-        user_login(sockfd, username);
+        std::cin >> input;
+        send_string(sockfd, input);
     }
     close(sockfd);
 }

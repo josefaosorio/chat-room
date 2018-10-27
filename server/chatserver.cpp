@@ -44,48 +44,26 @@ int socket_bind_listen(int port) {
 
 }
 
-// this will neet to handle the multithreading - TODO
 int accept_connection(int sockfd) {
     int newfd;
     struct sockaddr_storage their_addr;
     socklen_t sin_size;
 
     sin_size = sizeof(their_addr);
-    pthread_t thread_id;
-    while (newfd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size)) {
-
-        printf("Received connection\n");
-        if (pthread_create(&thread_id, NULL, client_handler, (void*)&newfd) < 0) {
-            perror("Could not create thread");
-            return -1;
-        }
-
-        // do we need pthread_join here? The sample code has it commented out...
-        //pthread_join(thread_id, NULL);
-        printf("Handler assigned to client\n");
-    }
-
+    newfd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
     if (newfd == -1) {
         perror("ERROR in accepting");
         return -1;
     }
 
-    return 0;
-}
-
-void *client_handler(void *socket_desc) {
-    printf("in client_handler\n");
-    //Get the socket descriptor
-    int socket = *(int*)socket_desc;
-
-    handle_login(socket_desc);
-
-    // add it to data structure of current users
+    return newfd;
 }
 
 int main(int argc, char** argv) {
     int port;
     int sockfd, newfd;
+    int *newfd_ptr;
+    pthread_t t_id;
     struct sockaddr_storage their_addr;
     socklen_t sin_size;
 
@@ -102,8 +80,12 @@ int main(int argc, char** argv) {
         printf("Waiting for connection...\n");
         if ((newfd = accept_connection(sockfd)) < 0)
             continue;
-        // TODO:handle commands here
-        close(newfd);
+        newfd_ptr = (int*)malloc(sizeof(*newfd_ptr));
+        *newfd_ptr = newfd;
+        if (pthread_create(&t_id, NULL, connection_handler, (void*)newfd_ptr) < 0) {
+            perror("Failed to create thread");
+            continue;
+        }
     }
 
     close(sockfd);

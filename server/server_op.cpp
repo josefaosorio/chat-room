@@ -7,6 +7,18 @@
 
 #include "chatserver.h"
 
+void* connection_handler(void *sockfd) {
+    int sock = *(int*)sockfd;
+    free(sockfd);
+    std::string buf;
+    while (1) {
+        recv_string(sock, buf);
+        std::cout << buf << std::endl;
+    }
+
+    return NULL;
+}
+
 void handle_login(void *sockfd) {
     std::string username;
     std::fstream user_creds;

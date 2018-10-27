@@ -40,8 +40,8 @@ class ClientMap {
         ClientMap();
         void set(std::string username, int sockfd);
         int get(std::string username);
-        std::vector list_clients();
-}
+        std::vector<std::string> list_clients();
+};
 
 
 /* server set up */
@@ -49,4 +49,5 @@ int socket_bind_listen(int port);
 int accept_connection(int sockfd);
 void *client_handler(void *socket_desc);
 
+void* connection_handler(void *sockfd);
 void handle_login(void *sockfd);
