@@ -43,11 +43,16 @@ class ClientMap {
         std::vector<std::string> list_clients();
 };
 
+struct ThreadArgs {
+    int sock;
+    ClientMap *client_map;
+};
+
 
 /* server set up */
 int socket_bind_listen(int port);
 int accept_connection(int sockfd);
 void *client_handler(void *socket_desc);
 
-void* connection_handler(void *sockfd);
+void* connection_handler(void *args);
 void handle_login(void *sockfd);

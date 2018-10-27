@@ -7,13 +7,19 @@
 
 #include "chatserver.h"
 
-void* connection_handler(void *sockfd) {
-    int sock = *(int*)sockfd;
-    free(sockfd);
+void* connection_handler(void *args) {
+    ThreadArgs *thread_args = (ThreadArgs*)args;
+    int sock = thread_args->sock;
+    ClientMap *client_map = thread_args->client_map;
+    free(args);
     std::string buf;
     while (1) {
+        buf = std::string();
         recv_string(sock, buf);
-        std::cout << buf << std::endl;
+        client_map->set(buf, 1);
+        for (auto user : client_map->list_clients())
+            std::cout << user << std::endl;
+        std::cout << "---" << std::endl;
     }
 
     return NULL;

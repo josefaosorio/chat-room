@@ -64,8 +64,7 @@ int main(int argc, char** argv) {
     int sockfd, newfd;
     int *newfd_ptr;
     pthread_t t_id;
-    struct sockaddr_storage their_addr;
-    socklen_t sin_size;
+    ClientMap *client_map = new ClientMap();
 
     if (argc != 2) {
         fprintf(stderr, "usage: %s port\n", argv[0]);
@@ -80,9 +79,12 @@ int main(int argc, char** argv) {
         printf("Waiting for connection...\n");
         if ((newfd = accept_connection(sockfd)) < 0)
             continue;
-        newfd_ptr = (int*)malloc(sizeof(*newfd_ptr));
-        *newfd_ptr = newfd;
-        if (pthread_create(&t_id, NULL, connection_handler, (void*)newfd_ptr) < 0) {
+        //newfd_ptr = (int*)malloc(sizeof(*newfd_ptr));
+        //*newfd_ptr = newfd;
+        ThreadArgs *args = (ThreadArgs*)malloc(sizeof(ThreadArgs));
+        args->sock = newfd;
+        args->client_map = client_map;
+        if (pthread_create(&t_id, NULL, connection_handler, (void*)args) < 0) {
             perror("Failed to create thread");
             continue;
         }

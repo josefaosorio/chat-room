@@ -7,7 +7,7 @@ TARGETS=	../chatserver
 
 all: $(TARGETS)
 
-../chatserver: chatserver.o server_op.o network_utils.o
+../chatserver: chatserver.o server_op.o network_utils.o ClientMap.o
 	$(CXX) $(CXFLAGS) -o $@ $^
 
 chatserver.o: chatserver.cpp chatserver.h
@@ -17,6 +17,9 @@ server_op.o: server_op.cpp chatserver.h
 	$(CXX) $(CXFLAGS) -o $@ -c $<
 
 network_utils.o: ../network_utils/network_utils.cpp ../network_utils/network_utils.h
+	$(CXX) $(CXFLAGS) -o $@ -c $<
+
+ClientMap.o: ClientMap.cpp chatserver.h
 	$(CXX) $(CXFLAGS) -o $@ -c $<
 
 clean:

@@ -8,7 +8,7 @@
 #include "chatserver.h"
 
 ClientMap::ClientMap() {
-    this.clients = unordered_map<std::string, int>();
+    this->clients = std::unordered_map<std::string, int>();
 }
 
 void ClientMap::set(std::string username, int sockfd) {
@@ -29,7 +29,7 @@ int ClientMap::get(std::string username) {
     return sockfd;
 }
 
-std::vector list_clients() {
+std::vector<std::string> ClientMap::list_clients() {
     pthread_mutex_lock(&mutex);
     std::vector<std::string> list;
     for (auto it = clients.begin(); it != clients.end(); it++) {
