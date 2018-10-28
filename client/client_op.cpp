@@ -7,19 +7,49 @@
 
  #include "chatclient.h"
 
- void user_login(int sockfd, char *username) {
-     std::string password;
+bool user_login(int sockfd, std::string username) {
+    char* pubkey;
+    std::string buf;
+    std::string password;
 
-     if (send_string(sockfd, std::string(username)) < 0) {
-         std::cerr << "Client fails to send username to server" << std::endl;
-         return;
-     }
+    // Send username
+    if (send_string(sockfd, username) < 0) {
+        std::cerr << "Client fails to send username to server" << std::endl;
+        return false;
+    }
 
-     std::cout << "Enter password: ";
-     getline(std::cin, password);
+    if (recv_string(sockfd, buf) < 0) {
+        std::cerr << "Client fails to receive username ACK" << std::endl;
+        return false;
+    }
 
-     if (send_string(sockfd, password) < 0) {
-         std::cerr << "Client fails to send password to server" << std::endl;
-         return;
-     }
- }
+    // Get password from user and send to server
+    std::cout << buf << std::endl;
+
+    std::cout << "Enter password: ";
+    std::cin >> password;
+
+    if (send_string(sockfd, password) < 0) {
+        std::cerr << "Client fails to send password to server" << std::endl;
+        return false;
+    }
+
+    if (recv_string(sockfd, buf) < 0) {
+        std::cerr << "Client fails to receive password ACK" << std::endl;
+        return false;
+    }
+
+    if (buf.compare("Authentication succeeded")) {
+        std::cout << buf << std::endl;
+        return false;
+    }
+
+    std::cout << buf << std::endl;
+    
+    pubkey = getPubKey();
+
+    if (send_pubkey(sockfd, pubkey) < 0) {
+        std::cerr << "Client fails to send pubkey to server" << std::endl;
+        return false;
+    }    
+}

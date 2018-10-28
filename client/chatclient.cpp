@@ -65,8 +65,7 @@ int main(int argc, char* argv[])
     }
 
     while (running) {
-        std::cin >> input;
-        send_string(sockfd, input);
+        user_login(sockfd, std::string(username));
     }
     close(sockfd);
 }

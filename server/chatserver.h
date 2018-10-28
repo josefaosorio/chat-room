@@ -8,6 +8,7 @@
 #pragma once
 
 #include "../network_utils/network_utils.h"
+#include "../network_utils/pg3lib.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -15,6 +16,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <ostream>
 #include <fstream>
 #include <unordered_map>
 #include <unistd.h>
@@ -31,15 +33,25 @@
 
 #define BACKLOG 1
 
+
+struct ClientInfo{
+    int sock;
+    char* pubkey;
+    bool empty = false;
+
+    ClientInfo() {}
+    ClientInfo(int sockfd, char* key) : sock(sockfd), pubkey(key) {}
+};
+
 class ClientMap {
     private:
-        std::unordered_map<std::string, int> clients;
+        std::unordered_map<std::string, ClientInfo> clients;
         pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
     public:
         ClientMap();
-        void set(std::string username, int sockfd);
-        int get(std::string username);
+        void set_info(std::string username, ClientInfo info);
+        ClientInfo get(std::string username);
         std::vector<std::string> list_clients();
 };
 
@@ -49,10 +61,11 @@ struct ThreadArgs {
 };
 
 
+
 /* server set up */
 int socket_bind_listen(int port);
 int accept_connection(int sockfd);
 void *client_handler(void *socket_desc);
 
 void* connection_handler(void *args);
-void handle_login(void *sockfd);
+bool handle_login(int sockfd, ClientMap* client_map);

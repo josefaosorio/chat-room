@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
     int sockfd, newfd;
     int *newfd_ptr;
     pthread_t t_id;
-    ClientMap *client_map = new ClientMap();
+    ClientMap *client_map;
 
     if (argc != 2) {
         fprintf(stderr, "usage: %s port\n", argv[0]);
@@ -75,12 +75,12 @@ int main(int argc, char** argv) {
     if ((sockfd = socket_bind_listen(port)) < 0)
         exit(1);
 
+    client_map = new ClientMap();
+
     while (1) {
         printf("Waiting for connection...\n");
         if ((newfd = accept_connection(sockfd)) < 0)
             continue;
-        //newfd_ptr = (int*)malloc(sizeof(*newfd_ptr));
-        //*newfd_ptr = newfd;
         ThreadArgs *args = (ThreadArgs*)malloc(sizeof(ThreadArgs));
         args->sock = newfd;
         args->client_map = client_map;
@@ -91,4 +91,5 @@ int main(int argc, char** argv) {
     }
 
     close(sockfd);
+    free(client_map);
 }

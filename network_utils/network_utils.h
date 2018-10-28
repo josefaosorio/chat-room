@@ -26,3 +26,10 @@
  */
 int send_string(int sockfd, std::string msg);
 int recv_string(int sockfd, std::string &msg);
+
+/*
+ * Send and receive char* pubkey
+ * recv_pubkey returns a malloc'd pointer
+ */
+int send_pubkey(int sockfd, char* pubkey);
+char* recv_pubkey(int sockfd);

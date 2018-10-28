@@ -5,6 +5,7 @@ Netid: josorio2, ktong1, jhardey
 */
 
 #include "../network_utils/network_utils.h"
+#include "../network_utils/pg3lib.h"
 
 #include <unistd.h>
 #include <cstdio>
@@ -26,4 +27,4 @@ Netid: josorio2, ktong1, jhardey
 
 int socket_connect(char *host, int port);
 
-void user_login(int sockfd, char *username);
+bool user_login(int sockfd, std::string username);

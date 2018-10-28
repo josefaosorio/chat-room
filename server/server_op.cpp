@@ -8,65 +8,115 @@
 #include "chatserver.h"
 
 void* connection_handler(void *args) {
+    // Get arguments from pointer
     ThreadArgs *thread_args = (ThreadArgs*)args;
     int sock = thread_args->sock;
     ClientMap *client_map = thread_args->client_map;
     free(args);
-    std::string buf;
+
     while (1) {
-        buf = std::string();
-        recv_string(sock, buf);
-        client_map->set(buf, 1);
-        for (auto user : client_map->list_clients())
-            std::cout << user << std::endl;
-        std::cout << "---" << std::endl;
+        // Authenticate user, skip if fails
+        if (!handle_login(sock, client_map))
+            continue;
+        for (auto a : client_map->list_clients()) {
+            std::cout << "username: " << a << std::endl;
+            ClientInfo i = client_map->get(a);
+            std::cout << "sock: " << i.sock << std::endl;
+            std::cout << "key: " << i.pubkey << std::endl;
+            std::cout << "---" << std::endl;
+        }
     }
 
     return NULL;
 }
 
-void handle_login(void *sockfd) {
-    std::string username;
+/* Returns true of successfully authenticate user,
+ * false otherwise
+ */
+bool handle_login(int sockfd, ClientMap* client_map) {
+    bool user_exist = false;
+    bool auth_success;
+    char* pubkey;
     std::fstream user_creds;
-    std::string user;
+    std::string client_username;
+    std::string username;
+    std::string client_password;
     std::string password;
-    std::string pass;
-    // get username from client
-    if (recv_string(*(int*)sockfd, username) < 0) {
+    std::string reply;
+
+    // Get username
+    if (recv_string(sockfd, client_username) < 0) {
         std::cerr << "Server fails to receive username" << std::endl;
-        return;
+        return false;
     }
 
-    std::cout << username << std::endl;
-    
-    if (recv_string(*(int*)sockfd, password) < 0) {
-        std::cerr << "Server fails to receive password" << std::endl;
-        return;
-    }
+    // Check if username exist
+    user_creds.open("user_creds.txt", std::ios::app|std::ios::in|std::ios::out);
 
-    std::cout << password << std::endl;
-
-    // check if username already exists, if not add it
-    user_creds.open("user_creds.txt", std::fstream::app|std::ios::in);
-
-    while (user_creds >> user >> pass) {
-        std::cout << user << pass << std::endl;
-        if (user.compare(username) == 0 && pass.compare(password) == 0) {
-            // ask user for password
-            std::string success_msg = "Client successfully authenticated\n";
-            if (send_string(*(int*)sockfd, success_msg) < 0) {
-                std::cerr << "Server fails to send authentication message" << std::endl;
-                return;
-            }
+    while (user_creds >> username >> password) {
+        if (username.compare(client_username) == 0) {
+            user_exist = true;
             break;
+        }
+    }
+
+    // Inform user if username exist
+    if (user_exist)
+        reply = std::string("Welcome back, please enter password");
+    else
+        reply = std::string("Creating new user");
+
+    if (send_string(sockfd, reply) < 0) {
+        std::cerr << "Server fails to reply client" << std::endl;
+        user_creds.close();
+        return false;
+    }
+        
+    // Get password from user 
+    if (recv_string(sockfd, client_password) < 0) {
+        std::cerr << "Server fails to receive password" << std::endl;
+        user_creds.close();
+        return false;
+    }
+
+    // Append crediential or verify password
+    if (!user_exist) {
+        user_creds.seekp(std::ios_base::end);
+        user_creds.clear();
+        user_creds << client_username << " " << client_password << std::endl;
+        auth_success = true;
+    } else {
+        if (!password.compare(client_password)) {
+            auth_success = true;
+        } else {
+            auth_success = false;
         }
 
     }
-    if (user.empty() || pass.empty()) {
-        user_creds << user << pass;
+
+    if (!auth_success) {
+        send_string(sockfd, "Wrong password, authentication failed");
+        user_creds.close();
+        return false;
     }
 
-    // std::cout << "after while in handle login" << std::endl;
-    // user_creds << username;
+    if (send_string(sockfd, "Authentication succeeded") < 0) {
+        std::cerr << "Server failed to send ack" << std::endl;
+        user_creds.close();
+        return false;
+    }
+
+    pubkey = recv_pubkey(sockfd);
+
+    if (pubkey == NULL) {
+        std::cerr << "Server failed to receive pub key" << std::endl;
+        user_creds.close();
+        return false;
+    }
+
+    ClientInfo info { sockfd, pubkey };
+    client_map->set_info(client_username, info);
+
     user_creds.close();
+    return auth_success;
 }
