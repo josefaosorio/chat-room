@@ -6,9 +6,10 @@
  */
 
 #pragma once
+#ifndef CHATSERVER_H
+#define CHATSERVER_H
 
 #include "../network_utils/network_utils.h"
-#include "../network_utils/pg3lib.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -69,3 +70,5 @@ void *client_handler(void *socket_desc);
 
 void* connection_handler(void *args);
 bool handle_login(int sockfd, ClientMap* client_map);
+
+#endif

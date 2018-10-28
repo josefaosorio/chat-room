@@ -5,7 +5,6 @@ Netid: josorio2, ktong1, jhardey
 */
 
 #include "../network_utils/network_utils.h"
-#include "../network_utils/pg3lib.h"
 
 #include <unistd.h>
 #include <cstdio>

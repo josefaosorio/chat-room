@@ -64,8 +64,14 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
+    
     while (running) {
         user_login(sockfd, std::string(username));
+        while (1) {
+            std::string buf = std::string();
+            std::cin >> buf;
+            send_string(sockfd, buf);
+        }
     }
     close(sockfd);
 }

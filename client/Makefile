@@ -2,7 +2,7 @@
 #Netid: ktong1, jhardey, josorio2
 
 CXX=		g++
-CXFLAGS=	-g -std=c++11 -lpthread
+CXFLAGS=	-g -std=c++11 -lpthread -lcrypto
 TARGETS=	../chatclient
 
 all: $(TARGETS)

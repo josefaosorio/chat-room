@@ -6,6 +6,7 @@
  */
 
  #include "chatclient.h"
+ #include "../network_utils/pg3lib.h"
 
 bool user_login(int sockfd, std::string username) {
     char* pubkey;
@@ -18,6 +19,7 @@ bool user_login(int sockfd, std::string username) {
         return false;
     }
 
+    buf.clear();
     if (recv_string(sockfd, buf) < 0) {
         std::cerr << "Client fails to receive username ACK" << std::endl;
         return false;
@@ -34,6 +36,7 @@ bool user_login(int sockfd, std::string username) {
         return false;
     }
 
+    buf.clear();
     if (recv_string(sockfd, buf) < 0) {
         std::cerr << "Client fails to receive password ACK" << std::endl;
         return false;

@@ -6,6 +6,7 @@
  */
 
 #include "chatserver.h"
+#include "../network_utils/pg3lib.h"
 
 void* connection_handler(void *args) {
     // Get arguments from pointer
