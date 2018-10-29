@@ -20,6 +20,7 @@ void* connection_handler(void *args) {
         // Authenticate user, skip if fails
         if (!handle_login(sock, client_map))
             continue;
+
         /*
         for (auto a : client_map->list_clients()) {
             std::cout << "username: " << a << std::endl;
