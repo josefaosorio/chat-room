@@ -72,6 +72,7 @@ void *client_handler(void *socket_desc);
 void* connection_handler(void *args);
 bool handle_login(int sockfd, ClientMap* client_map);
 bool handle_commands(int fd, ClientMap* cm);
+bool send_msg(int sockfd, std::string type, std::string sender, std::string msg);
 void broadcast_msg(int sockfd, ClientMap* cm);
 
 #endif

@@ -73,14 +73,15 @@ void public_message(int sockfd, Queue<std::string> *messages){
 
     // pop acknowledgement from Queue
     ack_msg = messages->pop();
-    if (ack_msg.compare("ACK") != 0) {
+    if (ack_msg.compare("1")) {
         std::cerr << "Acknowledgement not received" << std::endl;
         return;
     }
     ack_msg.clear();
 
     std::cout << "Enter the public message: ";
-    getline(std::cin, msg_to_send);
+    std::getline(std::cin, msg_to_send);
+    msg_to_send.erase(msg_to_send.rfind('\n'), 1);
 
     if (send_string(sockfd, msg_to_send) < 0) {
         std::cerr << "Client fails to send message to server" << std::endl;
@@ -88,7 +89,7 @@ void public_message(int sockfd, Queue<std::string> *messages){
     }
 
     ack_msg = messages->pop();
-    if (ack_msg.compare("ACK") != 0) {
+    if (ack_msg.compare("1") != 0) {
         std::cerr << "Acknowledgement not received" << std::endl;
         return;
     }

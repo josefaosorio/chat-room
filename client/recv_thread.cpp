@@ -52,6 +52,10 @@ void *message_recv_thread(void* args) {
             continue;
         }
 
+        std::cout << "type: " << type << std::endl;
+        std::cout << "sender: " << sender << std::endl;
+        std::cout << "msg: " << msg << std::endl;
+
         if (!type.compare("C"))
             msg_queue->push(msg);
         else if (!type.compare("P"))

@@ -35,15 +35,32 @@ void* connection_handler(void *args) {
     return NULL;
 }
 
+bool send_msg(int sockfd, std::string type, std::string sender, std::string msg) {
+    if (send_string(sockfd, type) < 0) {
+        fprintf(stderr, "Failed to send msg type");
+        return false;
+    }
+
+    if (send_string(sockfd, sender) < 0) {
+        fprintf(stderr, "Failed to send sender");
+        return false;
+    }
+
+    if (send_string(sockfd, msg) < 0) {
+        fprintf(stderr, "Failed to send msg");
+        return false;
+    }
+
+    return true;
+}
+
 void broadcast_msg(int sockfd, ClientMap* cm) {
     std::string msg;
     std::string username;
     ClientInfo info;
 
-    if (send_string(sockfd, std::string("1")) < 0) {
-        fprintf(stderr, "ERROR sending broadcast initial ACK");
+    if (!send_msg(sockfd, std::string("C"), std::string("dummy"), std::string("1")))
         return;
-    }
 
     if (recv_string(sockfd, msg) < 0) {
         fprintf(stderr, "ERROR in recving message to broadcast");
@@ -53,17 +70,16 @@ void broadcast_msg(int sockfd, ClientMap* cm) {
     for (auto it : cm->list_clients()) {
         username = it;
         info = cm->get(username);
-        
-        if (send_string(info.sock, std::string("dummy")) < 0) {
-            fprintf(stderr, "ERROR sending dummy sender");
-            return;
-        }
 
-        if (send_string(info.sock, msg) < 0) {
-            fprintf(stderr, "ERROR sending broadcast message");
+        if (info.sock == sockfd)
+            continue;
+
+        if (!send_msg(info.sock, std::string("P"), std::string("dummy"), msg))
             return;
-        }
     }
+
+    if (!send_msg(sockfd, std::string("C"), std::string("dummy"), std::string("1")))
+        return;
 }
 
 bool handle_commands(int fd, ClientMap* client_map){
