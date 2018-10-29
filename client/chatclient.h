@@ -35,7 +35,7 @@ enum Operation {
 struct ThreadArgs{
     int sockfd;
     Queue<std::string> *msg_queue;
-}
+};
 
 int socket_connect(char *host, int port);
 Operation parse_input();
@@ -44,3 +44,5 @@ bool user_login(int sockfd, std::string username);
 void public_message(int sockfd);
 void quit(int sockfd);
 void* message_recv_thread(void* args);
+void display_broadcast(std::string msg);
+void display_direct(std::string sender, std::string msg);
