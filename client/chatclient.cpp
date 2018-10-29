@@ -43,33 +43,22 @@ int socket_connect(char *host, int port) {
 }
 
 Operation parse_input(){
-  std::string input;
-  bool flag = false;
-  std::cout << "Please enter a command: P (Public Message), D (Direct Messaging), Q (Quit)\n";
-  std::cout << "> ";
-  Operation op;
+    std::string input;
+    std::cout << "Please enter a command: P (Public Message), D (Direct Messaging), Q (Quit)\n";
+    std::cout << "> ";
+    Operation op;
 
-  while(!flag){
-    getline(std::cin, input);
-    //std::cout << "input: " << input << std::endl;
-    if(!input.compare("P")){
-      op = P;
-      flag = true;
-    }
-    else if(!input.compare("D")){
-      op = D;
-      flag = true;
-    }
-    else if(!input.compare("Q")){
-      op = Q;
-      flag = true;
-    }
-    else {
-      flag = false;
-    }
-  }
+    std::cin >> input;
+    if(!input.compare("P"))
+        op = P;
+    else if(!input.compare("D"))
+        op = D;
+    else if(!input.compare("Q"))
+        op = Q;
+    else
+        op = U;
 
-  return op;
+    return op;
 }
 
 int main(int argc, char* argv[])
@@ -96,24 +85,30 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    user_login(sockfd, std::string(username));
+    // Checck in log in was successfully
+    if (!user_login(sockfd, std::string(username))) {
+        std::cout << "failed" << std::endl;
+        close(sockfd);
+        exit(1);
+    }
+
+    // Parse input and carry out operation
     while (running) {
-            op = parse_input();
-            switch(op){
-              case P:
+        op = parse_input();
+        switch(op){
+            case P:
                 public_message(sockfd);
                 break;
-              case D:
+            case D:
                 break;
-              case Q:
+            case Q:
                 quit(sockfd);
                 running = false;
                 break;
-              case UNKNOWN:
+            case U:
+                std::cout << "Invalid input, please try again" << std::endl;
                 break;
-            }
-            //send_string(sockfd, buf);
-
+        }
     }
     close(sockfd);
 
@@ -123,3 +118,4 @@ int main(int argc, char* argv[])
 main thread - stuff isnide the while running
 second thread - listening from the server
   - any public messages or direct messages that people send you
+  */

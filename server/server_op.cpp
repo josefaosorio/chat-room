@@ -10,17 +10,18 @@
 
 void* connection_handler(void *args) {
     bool flag = true;
+
     // Get arguments from pointer
     ThreadArgs *thread_args = (ThreadArgs*)args;
     int sock = thread_args->sock;
     ClientMap *client_map = thread_args->client_map;
     free(args);
 
+    // Authenticate user, kills connection if fails
+    if (!handle_login(sock, client_map))
+        pthread_exit(NULL);
+
     while (flag) {
-        // Authenticate user, skip if fails
-        if (!handle_login(sock, client_map))
-            continue;
-        /*
         for (auto a : client_map->list_clients()) {
             std::cout << "username: " << a << std::endl;
             ClientInfo i = client_map->get(a);
@@ -28,8 +29,6 @@ void* connection_handler(void *args) {
             std::cout << "key: " << i.pubkey << std::endl;
             std::cout << "---" << std::endl;
         }
-        */
-
         flag = handle_commands(sock, client_map);
     }
 
@@ -37,44 +36,42 @@ void* connection_handler(void *args) {
 }
 
 bool handle_commands(int fd, ClientMap* client_map){
-  std::string op;
-  bool running = true;
-  while(running) {
-    op = std::string();
-    std::cout << "sockfd in server:handle_commands: " << fd << std::endl;
+    std::string op;
+    bool running = true;
 
-    if (recv_string(fd, op) < 0){
-      std::cout << "op in server:handle_commands: " << op << std::endl;
-      std::cerr << "Error receiving operation" << std::endl;
-      return;
-    }
+    while(running) {
+        op = std::string();
 
-    if (!op.compare("P")){
+        if (recv_string(fd, op) < 0){
+            std::cout << "op in server:handle_commands: " << op << std::endl;
+            std::cerr << "Error receiving operation" << std::endl;
+            return false;
+        }
 
-      return true;
-    }
-    else if(!op.compare("D")){
-      //something
-      return true;
-    }
-    else if(!op.compare("Q")){
-      close(fd);
-
-      for (auto a : client_map->list_clients()) {
-          //std::cout << "username: " << a << std::endl;
-          ClientInfo i = client_map->get(a);
-          if (i.sock == fd){
-            if (client_map->remove_user(a) < 0){
-              std::cerr << "Error removing user" << std::endl;
+        if (!op.compare("P")){
+            return true;
+        }
+        else if(!op.compare("D")){
+            //something
+            return true;
+        }
+        else if(!op.compare("Q")){
+            close(fd);
+        
+            for (auto a : client_map->list_clients()) {
+                ClientInfo i = client_map->get(a);
+                if (i.sock == fd){
+                    if (client_map->remove_user(a) < 0){
+                        std::cerr << "Error removing user" << std::endl;
+                    }
+                }
             }
-          }
-      }
-      return false;
+            return false;
+        }
     }
-  }
 }
 
-/* Returns true of successfully authenticate user,
+/* Returns true if successfully authenticate user,
  * false otherwise
  */
 bool handle_login(int sockfd, ClientMap* client_map) {

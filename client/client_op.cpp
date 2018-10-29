@@ -43,7 +43,7 @@ bool user_login(int sockfd, std::string username) {
     }
 
     if (buf.compare("Authentication succeeded")) {
-        std::cout << buf << std::endl;
+        std::cerr << "Password ACK says failed" << std::endl;
         return false;
     }
 
@@ -55,6 +55,11 @@ bool user_login(int sockfd, std::string username) {
         std::cerr << "Client fails to send pubkey to server" << std::endl;
         return false;
     }
+
+    free(pubkey);
+    std::cout << "Registration succeeded" << std::endl;
+
+    return true;
 }
 
 void public_message(int sockfd){
@@ -71,8 +76,8 @@ void public_message(int sockfd){
 }
 
 void quit(int sockfd){
-  if(send_string(sockfd, std::string("Q")) < 0){
-    std::cerr << "Client fails to send command to server" << std::endl;
-    return;
-  }
+    if(send_string(sockfd, std::string("Q")) < 0){
+        std::cerr << "Client fails to send command to server" << std::endl;
+        return;
+    }
 }
