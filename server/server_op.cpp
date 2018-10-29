@@ -50,7 +50,7 @@ bool handle_commands(int fd, ClientMap* client_map){
     }
 
     if (!op.compare("P")){
-      //something
+
       return true;
     }
     else if(!op.compare("D")){
