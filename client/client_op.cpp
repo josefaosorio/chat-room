@@ -62,15 +62,53 @@ bool user_login(int sockfd, std::string username) {
     return true;
 }
 
-void public_message(int sockfd){
-  if (send_string(sockfd, "P") < 0) {
-    std::cerr << "Client fails to send command to server" << std::endl;
-    return;
-  }
+void public_message(int sockfd, Queue<std::string> *messages){
+    std::string ack_msg;
+    std::string msg_to_send;
 
-  //how to tell if a user is still connected - if you try to receive something from
-  //a socket that has been closed, it'll return a 0-length message so you can check
-  //for that
+    if (send_string(sockfd, "P") < 0) {
+        std::cerr << "Client fails to send command to server" << std::endl;
+        return;
+    }
+
+    // pop acknowledgement from Queue
+    ack_msg = messages->pop();
+    if (ack_msg.compare("ACK") != 0) {
+        std::cerr << "Acknowledgement not received" << std::endl;
+        return;
+    }
+    ack_msg.clear();
+
+    std::cout << "Enter the public message: ";
+    getline(std::cin, msg_to_send);
+
+    if (send_string(sockfd, msg_to_send) < 0) {
+        std::cerr << "Client fails to send message to server" << std::endl;
+        return;
+    }
+
+    ack_msg = messages->pop();
+    if (ack_msg.compare("ACK") != 0) {
+        std::cerr << "Acknowledgement not received" << std::endl;
+        return;
+    }
+    ack_msg.clear();
+
+    //how to tell if a user is still connected - if you try to receive something from
+    //a socket that has been closed, it'll return a 0-length message so you can check
+    //for that
+}
+
+void direct_message(int sockfd, Queue<std::string> *messages) {
+    std::string user_list_csv;
+
+    if (send_string(sockfd, "D") < 0) {
+        std::cerr << "Client fails to send command to server" << std::endl;
+        return;
+    }
+
+    user_list_csv = messages->pop();
+
 
 
 }

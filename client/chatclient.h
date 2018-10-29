@@ -35,12 +35,13 @@ enum Operation {
 struct ThreadArgs{
     int sockfd;
     Queue<std::string> *msg_queue;
-}
+};
 
 int socket_connect(char *host, int port);
 Operation parse_input();
 
 bool user_login(int sockfd, std::string username);
-void public_message(int sockfd);
+void public_message(int sockfd, Queue<std::string> *messages);
+void direct_message(int sockfd, Queue<std::string> *messages);
 void quit(int sockfd);
 void* message_recv_thread(void* args);

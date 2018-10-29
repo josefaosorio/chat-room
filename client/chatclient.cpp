@@ -108,9 +108,10 @@ int main(int argc, char* argv[])
         op = parse_input();
         switch(op){
             case P:
-                public_message(sockfd);
+                public_message(sockfd, messages);
                 break;
             case D:
+                direct_message(sockfd, messages);
                 break;
             case Q:
                 quit(sockfd);
