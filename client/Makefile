@@ -7,7 +7,7 @@ TARGETS=	../chatclient
 
 all: $(TARGETS)
 
-../chatclient: chatclient.o client_op.o network_utils.o
+../chatclient: chatclient.o client_op.o network_utils.o recv_thread.o
 	$(CXX) $(CXFLAGS) -o $@ $^
 
 chatclient.o: chatclient.cpp chatclient.h
@@ -17,6 +17,9 @@ client_op.o: client_op.cpp chatclient.h
 	$(CXX) $(CXFLAGS) -o $@ -c $<
 
 network_utils.o: ../network_utils/network_utils.cpp ../network_utils/network_utils.h
+	$(CXX) $(CXFLAGS) -o $@ -c $<
+
+recv_thread.o: recv_thread.cpp chatclient.h ../network_utils/network_utils.h
 	$(CXX) $(CXFLAGS) -o $@ -c $<
 
 clean:

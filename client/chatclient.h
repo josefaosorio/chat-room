@@ -45,3 +45,5 @@ void public_message(int sockfd, Queue<std::string> *messages);
 void direct_message(int sockfd, Queue<std::string> *messages);
 void quit(int sockfd);
 void* message_recv_thread(void* args);
+void display_broadcast(std::string msg);
+void display_direct(std::string sender, std::string msg);
