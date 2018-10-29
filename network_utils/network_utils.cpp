@@ -1,7 +1,7 @@
 /*
  * File: network_utils.cpp
  * Name: Herman Tong, Jessica Hardey, Josefa Osorio
- * Netid: ktong1, jhardey1, josorio2
+ * Netid: ktong1, jhardey, josorio2
  */
 
 #include "network_utils.h"
@@ -50,6 +50,8 @@ int recv_string(int sockfd, std::string &msg) {
         msg.append(std::string(buffer));
     }
 
+    std::cout << "message in recv string: " << msg << std::endl;
+
     return ret;
 }
 
@@ -85,7 +87,7 @@ char* recv_pubkey(int sockfd) {
         return NULL;
     }
     memcpy(&len, buffer, sizeof(size_t));
-    
+
     if ((ret = recv(sockfd, buffer, len, 0)) < 0) {
         perror("ERROR receiving pub key");
         return NULL;

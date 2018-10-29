@@ -42,6 +42,36 @@ int socket_connect(char *host, int port) {
     return s;
 }
 
+Operation parse_input(){
+  std::string input;
+  bool flag = false;
+  std::cout << "Please enter a command: P (Public Message), D (Direct Messaging), Q (Quit)\n";
+  std::cout << "> ";
+  Operation op;
+
+  while(!flag){
+    getline(std::cin, input);
+    //std::cout << "input: " << input << std::endl;
+    if(!input.compare("P")){
+      op = P;
+      flag = true;
+    }
+    else if(!input.compare("D")){
+      op = D;
+      flag = true;
+    }
+    else if(!input.compare("Q")){
+      op = Q;
+      flag = true;
+    }
+    else {
+      flag = false;
+    }
+  }
+
+  return op;
+}
+
 int main(int argc, char* argv[])
 {
     int sockfd;
@@ -50,10 +80,12 @@ int main(int argc, char* argv[])
     char *username;
     bool running = true;
     std::string input;
+    Operation op;
+    bool logged_in = false;
 
     if (argc != 4)
     {
-        std::cerr << "usage: wrong number of arguments" << std::endl;
+        fprintf(stderr, "usage: %s server_name port username\n", argv[0]);
         exit(1);
     }
     host = argv[1];
@@ -64,14 +96,30 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    
+    user_login(sockfd, std::string(username));
     while (running) {
-        user_login(sockfd, std::string(username));
-        while (1) {
-            std::string buf = std::string();
-            std::cin >> buf;
-            send_string(sockfd, buf);
-        }
+            op = parse_input();
+            switch(op){
+              case P:
+                public_message(sockfd);
+                break;
+              case D:
+                break;
+              case Q:
+                quit(sockfd);
+                running = false;
+                break;
+              case UNKNOWN:
+                break;
+            }
+            //send_string(sockfd, buf);
+
     }
     close(sockfd);
+
 }
+
+/*
+main thread - stuff isnide the while running
+second thread - listening from the server
+  - any public messages or direct messages that people send you

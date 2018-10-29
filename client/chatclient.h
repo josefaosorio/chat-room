@@ -24,6 +24,15 @@ Netid: josorio2, ktong1, jhardey
 #include <typeinfo>
 #include <sys/time.h>
 
+enum Operation {
+  P,
+  D,
+  Q
+};
+
 int socket_connect(char *host, int port);
+Operation parse_input(std::string argument);
 
 bool user_login(int sockfd, std::string username);
+void public_message(int sockfd);
+void quit(int sockfd);

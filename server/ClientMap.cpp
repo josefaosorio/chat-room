@@ -41,3 +41,15 @@ std::vector<std::string> ClientMap::list_clients() {
     pthread_mutex_unlock(&mutex);
     return list;
 }
+
+int ClientMap::remove_user(std::string username){
+  pthread_mutex_lock(&mutex);
+  std::unordered_map<std::string, ClientInfo>::const_iterator got = clients.find(username);
+  if (got == clients.end()) {
+      pthread_mutex_unlock(&mutex);
+      return -1;
+  }
+  clients.erase(username);
+  pthread_mutex_unlock(&mutex);
+  return 1;
+}
