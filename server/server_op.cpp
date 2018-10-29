@@ -35,6 +35,37 @@ void* connection_handler(void *args) {
     return NULL;
 }
 
+void broadcast_msg(int sockfd, ClientMap* cm) {
+    std::string msg;
+    std::string username;
+    ClientInfo info;
+
+    if (send_string(sockfd, std::string("1")) < 0) {
+        fprintf(stderr, "ERROR sending broadcast initial ACK");
+        return;
+    }
+
+    if (recv_string(sockfd, msg) < 0) {
+        fprintf(stderr, "ERROR in recving message to broadcast");
+        return;
+    }
+
+    for (auto it : cm->list_clients()) {
+        username = it;
+        info = cm->get(username);
+        
+        if (send_string(info.sock, std::string("dummy")) < 0) {
+            fprintf(stderr, "ERROR sending dummy sender");
+            return;
+        }
+
+        if (send_string(info.sock, msg) < 0) {
+            fprintf(stderr, "ERROR sending broadcast message");
+            return;
+        }
+    }
+}
+
 bool handle_commands(int fd, ClientMap* client_map){
     std::string op;
     bool running = true;
@@ -49,6 +80,7 @@ bool handle_commands(int fd, ClientMap* client_map){
         }
 
         if (!op.compare("P")){
+            broadcast_msg(fd, client_map);
             return true;
         }
         else if(!op.compare("D")){
