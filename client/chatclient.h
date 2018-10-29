@@ -5,6 +5,7 @@ Netid: josorio2, ktong1, jhardey
 */
 
 #include "../network_utils/network_utils.h"
+#include "queue.h"
 
 #include <unistd.h>
 #include <cstdio>
@@ -31,10 +32,15 @@ enum Operation {
     U
 };
 
+struct ThreadArgs{
+    int sockfd;
+    Queue<std::string> *msg_queue;
+}
+
 int socket_connect(char *host, int port);
 Operation parse_input();
 
 bool user_login(int sockfd, std::string username);
 void public_message(int sockfd);
 void quit(int sockfd);
-void* message_recv_thread(void* sock);
+void* message_recv_thread(void* args);

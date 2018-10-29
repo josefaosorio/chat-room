@@ -68,9 +68,11 @@ int main(int argc, char* argv[])
     char *host;
     char *username;
     bool running = true;
+    pthread_t t_id;
     std::string input;
     Operation op;
     bool logged_in = false;
+    Queue<std::string> *messages;
 
     if (argc != 4)
     {
@@ -89,6 +91,15 @@ int main(int argc, char* argv[])
     if (!user_login(sockfd, std::string(username))) {
         std::cout << "failed" << std::endl;
         close(sockfd);
+        exit(1);
+    }
+
+    messages = new Queue<std::string>();
+    ThreadArgs *args = (ThreadArgs*)malloc(sizeof(ThreadArgs));
+    args->sockfd = sockfd;
+    args->msg_queue = messages;
+    if (pthread_create(&t_id, NULL, message_recv_thread, (void*)args) < 0) {
+        perror("Failed to create message recv thread");
         exit(1);
     }
 
