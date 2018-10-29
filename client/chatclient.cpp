@@ -30,7 +30,7 @@ int socket_connect(char *host, int port) {
         return -1;
     }
 
-    printf("Connecting to %s\n", host);
+    printf("Connecting to %s on port %i\n", host, port);
     if (connect(s, (struct sockaddr *)&sin, sizeof(sin)) < 0)
     {
         perror("connection error\n");
@@ -116,8 +116,6 @@ int main(int argc, char* argv[]) {
               case UNKNOWN:
                 break;
             }
-            //send_string(sockfd, buf);
-
     }
     close(sockfd);
 
@@ -127,4 +125,4 @@ int main(int argc, char* argv[]) {
 main thread - stuff inside the while running
 second thread - listening from the server
   - any public messages or direct messages that people send you
-  */
+*/
