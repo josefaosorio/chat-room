@@ -23,16 +23,18 @@ Netid: josorio2, ktong1, jhardey
 #include <netdb.h>
 #include <typeinfo>
 #include <sys/time.h>
+#include <tuple>
 
 enum Operation {
   P,
   D,
-  Q
+  Q,
+  UNKNOWN
 };
 
 int socket_connect(char *host, int port);
-Operation parse_input(std::string argument);
+std::tuple<Operation, std::string> parse_input(std::string &args);
 
 bool user_login(int sockfd, std::string username);
-void public_message(int sockfd);
+void public_message(int sockfd, std::string message);
 void quit(int sockfd);

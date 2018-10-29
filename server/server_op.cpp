@@ -31,6 +31,7 @@ void* connection_handler(void *args) {
         */
 
         flag = handle_commands(sock, client_map);
+        return NULL;
     }
 
     return NULL;
@@ -38,19 +39,22 @@ void* connection_handler(void *args) {
 
 bool handle_commands(int fd, ClientMap* client_map){
   std::string op;
+  std::string message = std::string();
   bool running = true;
   while(running) {
     op = std::string();
-    std::cout << "sockfd in server:handle_commands: " << fd << std::endl;
 
+    // Receives operation from client
     if (recv_string(fd, op) < 0){
-      std::cout << "op in server:handle_commands: " << op << std::endl;
       std::cerr << "Error receiving operation" << std::endl;
-      return;
+      return false;
     }
 
     if (!op.compare("P")){
-
+      if (recv_string(fd, message) < 0){
+        std::cerr << "Error receiving public message" << std::endl;
+        return false;
+      }
       return true;
     }
     else if(!op.compare("D")){
