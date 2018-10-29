@@ -42,8 +42,9 @@ int socket_connect(char *host, int port) {
     return s;
 }
 
-Operation parse_input(){
+std::tuple<Operation, std::string> parse_input(std::string& args){
   std::string input;
+  std::string message;
   bool flag = false;
   std::cout << "Please enter a command: P (Public Message), D (Direct Messaging), Q (Quit)\n";
   std::cout << "> ";
@@ -51,9 +52,11 @@ Operation parse_input(){
 
   while(!flag){
     getline(std::cin, input);
-    //std::cout << "input: " << input << std::endl;
+    message = std::string();
     if(!input.compare("P")){
       op = P;
+      std::cout << "Enter the public message: ";
+      getline(std::cin, message);
       flag = true;
     }
     else if(!input.compare("D")){
@@ -65,15 +68,15 @@ Operation parse_input(){
       flag = true;
     }
     else {
+      op = UNKNOWN;
       flag = false;
     }
   }
 
-  return op;
+  return std::make_tuple(op, message);
 }
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     int sockfd;
     int port;
     char *host;
@@ -82,6 +85,7 @@ int main(int argc, char* argv[])
     std::string input;
     Operation op;
     bool logged_in = false;
+    std::string message;
 
     if (argc != 4)
     {
@@ -98,10 +102,10 @@ int main(int argc, char* argv[])
 
     user_login(sockfd, std::string(username));
     while (running) {
-            op = parse_input();
+            std::tie(op, message) = parse_input(message);
             switch(op){
               case P:
-                public_message(sockfd);
+                public_message(sockfd, message);
                 break;
               case D:
                 break;
@@ -120,6 +124,7 @@ int main(int argc, char* argv[])
 }
 
 /*
-main thread - stuff isnide the while running
+main thread - stuff inside the while running
 second thread - listening from the server
   - any public messages or direct messages that people send you
+  */

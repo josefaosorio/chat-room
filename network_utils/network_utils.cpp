@@ -50,8 +50,6 @@ int recv_string(int sockfd, std::string &msg) {
         msg.append(std::string(buffer));
     }
 
-    std::cout << "message in recv string: " << msg << std::endl;
-
     return ret;
 }
 

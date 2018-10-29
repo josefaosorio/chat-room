@@ -57,9 +57,14 @@ bool user_login(int sockfd, std::string username) {
     }
 }
 
-void public_message(int sockfd){
+void public_message(int sockfd, std::string message){
   if (send_string(sockfd, "P") < 0) {
     std::cerr << "Client fails to send command to server" << std::endl;
+    return;
+  }
+
+  if(send_string(sockfd, message) < 0){
+    std::cerr << "Client fails to send public message to server" << std::endl;
     return;
   }
 
