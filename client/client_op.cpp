@@ -48,11 +48,31 @@ bool user_login(int sockfd, std::string username) {
     }
 
     std::cout << buf << std::endl;
-    
+
     pubkey = getPubKey();
 
     if (send_pubkey(sockfd, pubkey) < 0) {
         std::cerr << "Client fails to send pubkey to server" << std::endl;
         return false;
-    }    
+    }
+}
+
+void public_message(int sockfd){
+  if (send_string(sockfd, "P") < 0) {
+    std::cerr << "Client fails to send command to server" << std::endl;
+    return;
+  }
+
+  //how to tell if a user is still connected - if you try to receive something from
+  //a socket that has been closed, it'll return a 0-length message so you can check
+  //for that
+
+
+}
+
+void quit(int sockfd){
+  if(send_string(sockfd, std::string("Q")) < 0){
+    std::cerr << "Client fails to send command to server" << std::endl;
+    return;
+  }
 }

@@ -54,6 +54,7 @@ class ClientMap {
         void set_info(std::string username, ClientInfo info);
         ClientInfo get(std::string username);
         std::vector<std::string> list_clients();
+        int remove_user(std::string username);
 };
 
 struct ThreadArgs {
@@ -70,5 +71,6 @@ void *client_handler(void *socket_desc);
 
 void* connection_handler(void *args);
 bool handle_login(int sockfd, ClientMap* client_map);
+bool handle_commands(int fd, ClientMap* cm);
 
 #endif

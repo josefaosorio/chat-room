@@ -1,7 +1,7 @@
 /*
  * File: network_utils.h
  * Name: Herman Tong, Josefa Osorio, Jessica Hardey
- * Netid: ktong1, josorio2, jhardey1
+ * Netid: ktong1, josorio2, jhardey
  */
 
 #include <string>

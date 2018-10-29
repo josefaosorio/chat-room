@@ -9,16 +9,18 @@
 #include "../network_utils/pg3lib.h"
 
 void* connection_handler(void *args) {
+    bool flag = true;
     // Get arguments from pointer
     ThreadArgs *thread_args = (ThreadArgs*)args;
     int sock = thread_args->sock;
     ClientMap *client_map = thread_args->client_map;
     free(args);
 
-    while (1) {
+    while (flag) {
         // Authenticate user, skip if fails
         if (!handle_login(sock, client_map))
             continue;
+        /*
         for (auto a : client_map->list_clients()) {
             std::cout << "username: " << a << std::endl;
             ClientInfo i = client_map->get(a);
@@ -26,9 +28,50 @@ void* connection_handler(void *args) {
             std::cout << "key: " << i.pubkey << std::endl;
             std::cout << "---" << std::endl;
         }
+        */
+
+        flag = handle_commands(sock, client_map);
     }
 
     return NULL;
+}
+
+bool handle_commands(int fd, ClientMap* client_map){
+  std::string op;
+  bool running = true;
+  while(running) {
+    op = std::string();
+    std::cout << "sockfd in server:handle_commands: " << fd << std::endl;
+
+    if (recv_string(fd, op) < 0){
+      std::cout << "op in server:handle_commands: " << op << std::endl;
+      std::cerr << "Error receiving operation" << std::endl;
+      return;
+    }
+
+    if (!op.compare("P")){
+
+      return true;
+    }
+    else if(!op.compare("D")){
+      //something
+      return true;
+    }
+    else if(!op.compare("Q")){
+      close(fd);
+
+      for (auto a : client_map->list_clients()) {
+          //std::cout << "username: " << a << std::endl;
+          ClientInfo i = client_map->get(a);
+          if (i.sock == fd){
+            if (client_map->remove_user(a) < 0){
+              std::cerr << "Error removing user" << std::endl;
+            }
+          }
+      }
+      return false;
+    }
+  }
 }
 
 /* Returns true of successfully authenticate user,
@@ -72,8 +115,8 @@ bool handle_login(int sockfd, ClientMap* client_map) {
         user_creds.close();
         return false;
     }
-        
-    // Get password from user 
+
+    // Get password from user
     if (recv_string(sockfd, client_password) < 0) {
         std::cerr << "Server fails to receive password" << std::endl;
         user_creds.close();
