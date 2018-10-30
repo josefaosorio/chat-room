@@ -110,15 +110,21 @@ void direct_message(int sockfd, Queue<std::string> *messages) {
     char *encrypted_user_msg;
     std::string msg_ack;
 
+    std::cout << "inside direct_message in client_op" << std::endl;
+
     if (send_string(sockfd, "D") < 0) {
         std::cerr << "Client fails to send command to server" << std::endl;
         return;
     }
 
+    std::cout << "after sending D to server in client_op:direct_message" << std::endl;
+
     user_list_csv = messages->pop();
     // parse list
     std::stringstream ss(user_list_csv);
     std::string username;
+
+    std::cout << "after popping user list off messages queue in client_op:direct_message" << std::endl;
 
     while (getline(ss, username, ',')) {
         user_list.push_back(username);
@@ -132,22 +138,33 @@ void direct_message(int sockfd, Queue<std::string> *messages) {
     std::cout << "\nPeer to message: ";
     getline(std::cin, peer);
 
+    std::cout << "before sending peer to server in client_op" << std::endl;
+
     if (send_string(sockfd, peer) < 0) {
         std::cerr << "Client fails to send command to server" << std::endl;
         return;
     }
+
+    std::cout << "after sending peer to server in client_op" << std::endl;
 
     pub_key = messages->pop().c_str();
 
     std::cout << "\nMessage: ";
     getline(std::cin, user_msg);
     c_user_msg = user_msg.c_str();
+    //std::cout << "pub key: " << pub_key << std::endl;
+    //std::cout << "user message: " << c_user_msg << std::endl;
     encrypted_user_msg = encrypt((char *)c_user_msg, (char *)pub_key);
+    std::string encrypted_user_msg_str(encrypted_user_msg);
 
-    if (send_string(sockfd, encrypted_user_msg) < 0) {
+    std::cout << "after popping user message off queue and getting encrypted msg in client_op" << std::endl;
+
+    if (send_string(sockfd, encrypted_user_msg_str) < 0) {
         std::cerr << "Client fails to send encrypted message" << std::endl;
         return;
     }
+
+    std::cout << "after sending encrypted message to server in client_op" << std::endl;
 
     msg_ack = messages->pop();
     if (msg_ack.compare("0") == 0) { // verify this string decision with Herman
@@ -159,6 +176,8 @@ void direct_message(int sockfd, Queue<std::string> *messages) {
         return;
     }
     msg_ack.clear();
+
+    std::cout << "after getting ack from popping off queue in client_op" << std::endl;
 }
 
 void quit(int sockfd){
@@ -176,7 +195,9 @@ void display_broadcast(std::string msg) {
 }
 
 void display_direct(std::string sender, std::string msg) {
+    std::cout << "beginning in display_direct msg: " << msg << std::endl;
     char* decrypted_msg = decrypt((char*)msg.c_str());
+    std::cout << "decrypted_msg: " << decrypted_msg << std::endl;
     std::string cpp_msg = std::string(decrypted_msg);
     free(decrypted_msg);
     std::cout << std::endl;
@@ -200,11 +221,15 @@ void *message_recv_thread(void* args) {
         sender.clear();
         msg.clear();
 
+        //std::cout << "msg_rcv_thrd: before recv string" << std::endl;
+
         // Receive message type
         if (recv_string(sockfd, type) < 0) {
             fprintf(stderr, "Failed to receive message type");
             continue;
         }
+
+        //std::cout << "msg_rcv_thrd: after receiving msg type and before receiving sender" << std::endl;
 
         // Receive sender
         if (recv_string(sockfd, sender) < 0) {
@@ -212,17 +237,27 @@ void *message_recv_thread(void* args) {
             continue;
         }
 
+        //std::cout << "msg_rcv_thrd: after receiving sender" << std::endl;
+
         // Receive msg
         if (recv_string(sockfd, msg) < 0) {
             fprintf(stderr, "Failed to receive message");
             continue;
         }
 
-        if (!type.compare("C"))
+        //std::cout << "msg_rcv_thrd: after receiving message" << std::endl;
+
+        if (!type.compare("C")){
+            std::cout << "pushing message" << std::endl;
             msg_queue->push(msg);
-        else if (!type.compare("P"))
+          }
+        else if (!type.compare("P")){
+            std::cout << "inside compare P" << std::endl;
             display_broadcast(msg);
-        else if (!type.compare("D"))
+          }
+        else if (!type.compare("D")){
+            std::cout << "inside compare D" << std::endl;
             display_direct(sender, msg);
+          }
     }
 }

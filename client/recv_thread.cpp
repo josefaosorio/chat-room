@@ -4,7 +4,7 @@
  * Netid: ktong1, josorio2, jhardey
  *
  */
-
+/*
 #include "chatclient.h"
 
 void display_broadcast(std::string msg) {
@@ -23,6 +23,7 @@ void display_direct(std::string sender, std::string msg) {
     std::cout << "> ";
     std::cout.flush();
 }
+
 
 void *message_recv_thread(void* args) {
     ThreadArgs *arguments = (ThreadArgs*)args;
@@ -57,11 +58,14 @@ void *message_recv_thread(void* args) {
             continue;
         }
 
-        if (!type.compare("C"))
-            msg_queue->push(msg);
+        if (!type.compare("C")){
+            std::cout << "inside C in recv_thread:msg_rcv_thrd" << std::endl;
+            std::cout << "msg being pushed into queue: " << str(msg) << std::endl;
+            msg_queue->push(msg);}
         else if (!type.compare("P"))
             display_broadcast(msg);
         else if (!type.compare("D"))
             display_direct(sender, msg);
     }
 }
+*/

@@ -22,6 +22,8 @@ void* connection_handler(void *args) {
         pthread_exit(NULL);
 
     while (flag) {
+
+      /*
         for (auto a : client_map->list_clients()) {
             std::cout << "username: " << a << std::endl;
             ClientInfo i = client_map->get(a);
@@ -29,6 +31,7 @@ void* connection_handler(void *args) {
             std::cout << "key: " << i.pubkey << std::endl;
             std::cout << "---" << std::endl;
         }
+        */
         flag = handle_commands(sock, client_map);
     }
 
@@ -89,10 +92,16 @@ void direct_msg(int sockfd, ClientMap* cm) {
     std::string pubkey;
     std::string user_list = std::string();
     ClientInfo info;
-    
+    ClientInfo senderInfo;
+
+
+
     // Generate comma separated list of users and send to client
     for (auto it : cm->list_clients()) {
-        user_list += it + ","; 
+        if ((cm->get(it)).sock != sockfd){
+          user_list += it + ",";
+        }
+
     }
     user_list.erase(user_list.size()-1);
 
@@ -107,7 +116,9 @@ void direct_msg(int sockfd, ClientMap* cm) {
         return;
     }
 
-    // Send public key bakc to client
+    std::cout << "right before sending public key back to client in server_op" << std::endl;
+
+    // Send public key back to client
     info = cm->get(user);
     if (send_msg(sockfd, std::string("C"), std::string("dummy"), std::string(info.pubkey)) < 0) {
         fprintf(stderr, "Failed to send pubkey to client");
@@ -142,7 +153,7 @@ void direct_msg(int sockfd, ClientMap* cm) {
         fprintf(stderr, "Failed to send message to target client");
         return;
     }
-    
+
     // send ACK that message was sent
     if (send_msg(sockfd, std::string("C"), std::string("dummy"), std::string("1")) < 0) {
         fprintf(stderr, "Failed to send fail ACK to client");
@@ -172,7 +183,7 @@ bool handle_commands(int fd, ClientMap* client_map){
         }
         else if(!op.compare("Q")){
             close(fd);
-        
+
             for (auto a : client_map->list_clients()) {
                 ClientInfo i = client_map->get(a);
                 if (i.sock == fd){
