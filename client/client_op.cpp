@@ -102,6 +102,13 @@ void public_message(int sockfd, Queue<std::string> *messages){
 
 void direct_message(int sockfd, Queue<std::string> *messages) {
     std::string user_list_csv;
+    std::vector<std::string> user_list;
+    std::string peer;
+    const char *pub_key;
+    std::string user_msg;
+    const char *c_user_msg;
+    char *encrypted_user_msg;
+    std::string msg_ack;
 
     if (send_string(sockfd, "D") < 0) {
         std::cerr << "Client fails to send command to server" << std::endl;
@@ -109,9 +116,52 @@ void direct_message(int sockfd, Queue<std::string> *messages) {
     }
 
     user_list_csv = messages->pop();
+    // parse list
+    std::stringstream ss(user_list_csv);
+    std::string username;
 
+    while (getline(ss, username, ',')) {
+        std::cout << username << std::endl;
+        user_list.push_back(username);
+    }
 
+    std::cout << "Peers online:" << std::endl;
+    for (auto it: user_list) {
+        std::cout << "\t" << it << std::endl;
+    }
 
+    std::cout << "\nPeer to message: ";
+    getline(std::cin, peer);
+
+    if (send_string(sockfd, peer) < 0) {
+        std::cerr << "Client fails to send command to server" << std::endl;
+        return;
+    }
+
+    pub_key = messages->pop().c_str();
+
+    std::cout << "\nMessage: ";
+    getline(std::cin, user_msg);
+    c_user_msg = user_msg.c_str();
+    printf(c_user_msg);
+    encrypted_user_msg = encrypt((char *)c_user_msg, (char *)pub_key);
+    printf(encrypted_user_msg);
+
+    if (send_string(sockfd, encrypted_user_msg) < 0) {
+        std::cerr << "Client fails to send encrypted message" << std::endl;
+        return;
+    }
+
+    msg_ack = messages->pop();
+    if (msg_ack.compare("-1") == 0) { // verify this string decision with Herman
+        std::cout << "Sorry, this user is no longer online" << std::endl;
+        return;
+    }
+    else if (msg_ack.compare("1") != 0) {
+        std::cerr << "Acknowledgement not received" << std::endl;
+        return;
+    }
+    msg_ack.clear();
 }
 
 void quit(int sockfd){

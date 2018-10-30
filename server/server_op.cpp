@@ -84,6 +84,7 @@ void broadcast_msg(int sockfd, ClientMap* cm) {
 
 void direct_msg(int sockfd, ClientMap* cm) {
     std::string msg;
+    std::string sender;
     std::string user;
     std::string pubkey;
     std::string user_list = std::string();
@@ -95,7 +96,7 @@ void direct_msg(int sockfd, ClientMap* cm) {
     }
     user_list.erase(user_list.size()-1);
 
-    if (send_string(sockfd, user_list) < 0) {
+    if (send_msg(sockfd, std::string("C"), std::string("dummy"), user_list) < 0) {
         fprintf(stderr, "ERROR in sending user list to client");
         return;
     }
@@ -107,7 +108,7 @@ void direct_msg(int sockfd, ClientMap* cm) {
     }
 
     // Send public key bakc to client
-    if (send_string(sockfd, std::string(info.pubkey)) < 0) {
+    if (send_msg(sockfd, std::string("C"), std::string("dummy"), std::string(info.pubkey)) < 0) {
         fprintf(stderr, "Failed to send pubkey to client");
         return;
     }
@@ -121,14 +122,23 @@ void direct_msg(int sockfd, ClientMap* cm) {
     // Check if client is still online, if so send the message
     info = cm->get(user);
     if (info.empty) {
-        if (send_string(sockfd, std::string("0")) < 0) {
+        if (send_msg(sockfd, std::string("C"), std::string("dummy"), std::string("0")) < 0) {
             fprintf(stderr, "Failed to send fail ACK to client");
         }
         return;
     }
 
+    // Find sender's username
+    for (auto it : cm->list_clients()) {
+        ClientInfo ci = cm->get(it);
+        if (ci.sock == sockfd) {
+            sender = it;
+            break;
+        }
+    }
+
     // Send message to target client
-    if (send_string(info.sock, msg) < 0) {
+    if (send_msg(info.sock, std::string("D"), sender, msg) < 0) {
         fprintf(stderr, "Failed to send message to target client");
         return;
     }
