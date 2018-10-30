@@ -82,6 +82,58 @@ void broadcast_msg(int sockfd, ClientMap* cm) {
         return;
 }
 
+void direct_msg(int sockfd, ClientMap* cm) {
+    std::string msg;
+    std::string user;
+    std::string pubkey;
+    std::string user_list = std::string();
+    ClientInfo info;
+    
+    // Generate comma separated list of users and send to client
+    for (auto it : cm->list_clients()) {
+        user_list += it + ","; 
+    }
+    user_list.erase(user_list.size()-1);
+
+    if (send_string(sockfd, user_list) < 0) {
+        fprintf(stderr, "ERROR in sending user list to client");
+        return;
+    }
+
+    // Get targeted user from client
+    if (recv_string(sockfd, user) < 0) {
+        fprintf(stderr, "ERROR in recving target user from client");
+        return;
+    }
+
+    // Send public key bakc to client
+    if (send_string(sockfd, std::string(info.pubkey)) < 0) {
+        fprintf(stderr, "Failed to send pubkey to client");
+        return;
+    }
+
+    // Get message from client
+    if (recv_string(sockfd, msg) < 0) {
+        fprintf(stderr, "Failed to receive message from client");
+        return;
+    }
+
+    // Check if client is still online, if so send the message
+    info = cm->get(user);
+    if (info.empty) {
+        if (send_string(sockfd, std::string("0")) < 0) {
+            fprintf(stderr, "Failed to send fail ACK to client");
+        }
+        return;
+    }
+
+    // Send message to target client
+    if (send_string(info.sock, msg) < 0) {
+        fprintf(stderr, "Failed to send message to target client");
+        return;
+    }
+}
+
 bool handle_commands(int fd, ClientMap* client_map){
     std::string op;
     bool running = true;
@@ -100,7 +152,7 @@ bool handle_commands(int fd, ClientMap* client_map){
             return true;
         }
         else if(!op.compare("D")){
-            //something
+            direct_msg(fd, client_map);
             return true;
         }
         else if(!op.compare("Q")){
