@@ -29,7 +29,7 @@ bool user_login(int sockfd, std::string username) {
     std::cout << buf << std::endl;
 
     std::cout << "Enter password: ";
-    std::cin >> password;
+    std::getline(std::cin, password);
 
     if (send_string(sockfd, password) < 0) {
         std::cerr << "Client fails to send password to server" << std::endl;
@@ -81,7 +81,7 @@ void public_message(int sockfd, Queue<std::string> *messages){
 
     std::cout << "Enter the public message: ";
     std::getline(std::cin, msg_to_send);
-    msg_to_send.erase(msg_to_send.rfind('\n'), 1);
+    std::cout << msg_to_send << std::endl;
 
     if (send_string(sockfd, msg_to_send) < 0) {
         std::cerr << "Client fails to send message to server" << std::endl;

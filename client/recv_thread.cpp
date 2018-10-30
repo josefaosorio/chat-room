@@ -10,13 +10,15 @@
 void display_broadcast(std::string msg) {
     std::cout << std::endl;
     std::cout << "*** Incoming public message ***: " << msg << std::endl;
-    std::cout << ">";
+    std::cout << "> ";
+    std::cout.flush();
 }
 
 void display_direct(std::string sender, std::string msg) {
     std::cout << std::endl;
     std::cout << "*** Incoming message from " << sender << " ***: " << msg << std::endl;
-    std::cout << ">";
+    std::cout << "> ";
+    std::cout.flush();
 }
 
 void *message_recv_thread(void* args) {
@@ -51,10 +53,6 @@ void *message_recv_thread(void* args) {
             fprintf(stderr, "Failed to receive message");
             continue;
         }
-
-        std::cout << "type: " << type << std::endl;
-        std::cout << "sender: " << sender << std::endl;
-        std::cout << "msg: " << msg << std::endl;
 
         if (!type.compare("C"))
             msg_queue->push(msg);

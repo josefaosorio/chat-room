@@ -1,4 +1,9 @@
-/* queue.h */
+/* 
+ * File: queue.h 
+ * Name: Herman Tong, Josefa Osorio, Jessica Hardey
+ * Netid: ktong1, josorio2, jhardey
+ *
+ * */
 
 #pragma once
 

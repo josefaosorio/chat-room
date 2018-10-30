@@ -48,7 +48,7 @@ Operation parse_input(){
     std::cout << "> ";
     Operation op;
 
-    std::cin >> input;
+    std::getline(std::cin, input);
     if(!input.compare("P"))
         op = P;
     else if(!input.compare("D"))
