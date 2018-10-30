@@ -108,6 +108,7 @@ void direct_msg(int sockfd, ClientMap* cm) {
     }
 
     // Send public key bakc to client
+    info = cm->get(user);
     if (send_msg(sockfd, std::string("C"), std::string("dummy"), std::string(info.pubkey)) < 0) {
         fprintf(stderr, "Failed to send pubkey to client");
         return;
@@ -120,7 +121,6 @@ void direct_msg(int sockfd, ClientMap* cm) {
     }
 
     // Check if client is still online, if so send the message
-    info = cm->get(user);
     if (info.empty) {
         if (send_msg(sockfd, std::string("C"), std::string("dummy"), std::string("0")) < 0) {
             fprintf(stderr, "Failed to send fail ACK to client");
@@ -141,6 +141,11 @@ void direct_msg(int sockfd, ClientMap* cm) {
     if (send_msg(info.sock, std::string("D"), sender, msg) < 0) {
         fprintf(stderr, "Failed to send message to target client");
         return;
+    }
+    
+    // send ACK that message was sent
+    if (send_msg(sockfd, std::string("C"), std::string("dummy"), std::string("1")) < 0) {
+        fprintf(stderr, "Failed to send fail ACK to client");
     }
 }
 

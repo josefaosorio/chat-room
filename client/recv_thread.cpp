@@ -15,8 +15,11 @@ void display_broadcast(std::string msg) {
 }
 
 void display_direct(std::string sender, std::string msg) {
+    char* decrypted_msg = decrypt((char*)msg.c_str());
+    std::string cpp_msg = std::string(decrypted_msg);
+    free(decrypted_msg);
     std::cout << std::endl;
-    std::cout << "*** Incoming message from " << sender << " ***: " << msg << std::endl;
+    std::cout << "*** Incoming message from " << sender << " ***: " << cpp_msg << std::endl;
     std::cout << "> ";
     std::cout.flush();
 }

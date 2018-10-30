@@ -121,7 +121,6 @@ void direct_message(int sockfd, Queue<std::string> *messages) {
     std::string username;
 
     while (getline(ss, username, ',')) {
-        std::cout << username << std::endl;
         user_list.push_back(username);
     }
 
@@ -143,9 +142,7 @@ void direct_message(int sockfd, Queue<std::string> *messages) {
     std::cout << "\nMessage: ";
     getline(std::cin, user_msg);
     c_user_msg = user_msg.c_str();
-    printf(c_user_msg);
     encrypted_user_msg = encrypt((char *)c_user_msg, (char *)pub_key);
-    printf(encrypted_user_msg);
 
     if (send_string(sockfd, encrypted_user_msg) < 0) {
         std::cerr << "Client fails to send encrypted message" << std::endl;
@@ -153,7 +150,7 @@ void direct_message(int sockfd, Queue<std::string> *messages) {
     }
 
     msg_ack = messages->pop();
-    if (msg_ack.compare("-1") == 0) { // verify this string decision with Herman
+    if (msg_ack.compare("0") == 0) { // verify this string decision with Herman
         std::cout << "Sorry, this user is no longer online" << std::endl;
         return;
     }
@@ -168,5 +165,64 @@ void quit(int sockfd){
     if(send_string(sockfd, std::string("Q")) < 0){
         std::cerr << "Client fails to send command to server" << std::endl;
         return;
+    }
+}
+
+void display_broadcast(std::string msg) {
+    std::cout << std::endl;
+    std::cout << "*** Incoming public message ***: " << msg << std::endl;
+    std::cout << "> ";
+    std::cout.flush();
+}
+
+void display_direct(std::string sender, std::string msg) {
+    char* decrypted_msg = decrypt((char*)msg.c_str());
+    std::string cpp_msg = std::string(decrypted_msg);
+    free(decrypted_msg);
+    std::cout << std::endl;
+    std::cout << "*** Incoming message from " << sender << " ***: " << cpp_msg << std::endl;
+    std::cout << "> ";
+    std::cout.flush();
+}
+
+void *message_recv_thread(void* args) {
+    ThreadArgs *arguments = (ThreadArgs*)args;
+    int sockfd = arguments->sockfd;
+    Queue<std::string> *msg_queue = arguments->msg_queue;
+    free(args);
+
+    std::string type;
+    std::string sender;
+    std::string msg;
+
+    while (true) {
+        type.clear();
+        sender.clear();
+        msg.clear();
+
+        // Receive message type
+        if (recv_string(sockfd, type) < 0) {
+            fprintf(stderr, "Failed to receive message type");
+            continue;
+        }
+
+        // Receive sender
+        if (recv_string(sockfd, sender) < 0) {
+            fprintf(stderr, "Failed to receive sender");
+            continue;
+        }
+
+        // Receive msg
+        if (recv_string(sockfd, msg) < 0) {
+            fprintf(stderr, "Failed to receive message");
+            continue;
+        }
+
+        if (!type.compare("C"))
+            msg_queue->push(msg);
+        else if (!type.compare("P"))
+            display_broadcast(msg);
+        else if (!type.compare("D"))
+            display_direct(sender, msg);
     }
 }
