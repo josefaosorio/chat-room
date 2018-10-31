@@ -22,16 +22,6 @@ void* connection_handler(void *args) {
         pthread_exit(NULL);
 
     while (flag) {
-
-      /*
-        for (auto a : client_map->list_clients()) {
-            std::cout << "username: " << a << std::endl;
-            ClientInfo i = client_map->get(a);
-            std::cout << "sock: " << i.sock << std::endl;
-            std::cout << "key: " << i.pubkey << std::endl;
-            std::cout << "---" << std::endl;
-        }
-        */
         flag = handle_commands(sock, client_map);
     }
 
@@ -39,16 +29,19 @@ void* connection_handler(void *args) {
 }
 
 bool send_msg(int sockfd, std::string type, std::string sender, std::string msg) {
+    // Send message type to client
     if (send_string(sockfd, type) < 0) {
         fprintf(stderr, "Failed to send msg type");
         return false;
     }
 
+    // Send target user to client
     if (send_string(sockfd, sender) < 0) {
         fprintf(stderr, "Failed to send sender");
         return false;
     }
 
+    // Send message to client
     if (send_string(sockfd, msg) < 0) {
         fprintf(stderr, "Failed to send msg");
         return false;
@@ -62,14 +55,17 @@ void broadcast_msg(int sockfd, ClientMap* cm) {
     std::string username;
     ClientInfo info;
 
+    // Sending command
     if (!send_msg(sockfd, std::string("C"), std::string("dummy"), std::string("1")))
         return;
 
+    // Receiving message from client
     if (recv_string(sockfd, msg) < 0) {
         fprintf(stderr, "ERROR in recving message to broadcast");
         return;
     }
 
+    // Getting the client info, checking the socket, and sending the P message
     for (auto it : cm->list_clients()) {
         username = it;
         info = cm->get(username);
@@ -105,6 +101,7 @@ void direct_msg(int sockfd, ClientMap* cm) {
     }
     user_list.erase(user_list.size()-1);
 
+    // Send command to client
     if (send_msg(sockfd, std::string("C"), std::string("dummy"), user_list) < 0) {
         fprintf(stderr, "ERROR in sending user list to client");
         return;
@@ -115,8 +112,6 @@ void direct_msg(int sockfd, ClientMap* cm) {
         fprintf(stderr, "ERROR in recving target user from client");
         return;
     }
-
-    std::cout << "right before sending public key back to client in server_op" << std::endl;
 
     // Send public key back to client
     info = cm->get(user);
@@ -167,12 +162,12 @@ bool handle_commands(int fd, ClientMap* client_map){
     while(running) {
         op = std::string();
 
+        // get socket fd
         if (recv_string(fd, op) < 0){
-            std::cout << "op in server:handle_commands: " << op << std::endl;
             std::cerr << "Error receiving operation" << std::endl;
             return false;
         }
-
+        // Get command and process accordingly
         if (!op.compare("P")){
             broadcast_msg(fd, client_map);
             return true;
@@ -184,6 +179,7 @@ bool handle_commands(int fd, ClientMap* client_map){
         else if(!op.compare("Q")){
             close(fd);
 
+            // Remove user from list of online users
             for (auto a : client_map->list_clients()) {
                 ClientInfo i = client_map->get(a);
                 if (i.sock == fd){
@@ -261,24 +257,28 @@ bool handle_login(int sockfd, ClientMap* client_map) {
 
     }
 
+    // check for authentication success
     if (!auth_success) {
         send_string(sockfd, "Wrong password, authentication failed");
         user_creds.close();
         return false;
     }
 
+    // send authentication to client
     if (send_string(sockfd, "Authentication succeeded") < 0) {
         std::cerr << "Server failed to send ack" << std::endl;
         user_creds.close();
         return false;
     }
 
+    // Get public key from client
     if (recv_string(sockfd, pubkey_string) < 0) {
         fprintf(stderr, "Failed to receive pubkey string");
         user_creds.close();
         return false;
     }
 
+    // set client's info in the client map
     ClientInfo info { sockfd, pubkey_string };
     client_map->set_info(client_username, info);
 

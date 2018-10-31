@@ -30,7 +30,7 @@ int socket_connect(char *host, int port) {
         return -1;
     }
 
-    printf("Connecting to %s\n", host);
+    printf("Connecting to %s on port %i\n", host, port);
     if (connect(s, (struct sockaddr *)&sin, sizeof(sin)) < 0)
     {
         perror("connection error\n");
@@ -56,7 +56,7 @@ Operation parse_input(){
     else if(!input.compare("Q"))
         op = Q;
     else
-        op = U;
+        op = U; //Unknown
 
     return op;
 }
@@ -87,13 +87,14 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    // Checck in log in was successfully
+    // Checck if log in was successfully
     if (!user_login(sockfd, std::string(username))) {
         std::cout << "failed" << std::endl;
         close(sockfd);
         exit(1);
     }
 
+    // Creates receiving thread
     messages = new Queue<std::string>();
     ThreadArgs *args = (ThreadArgs*)malloc(sizeof(ThreadArgs));
     args->sockfd = sockfd;
@@ -125,9 +126,3 @@ int main(int argc, char* argv[])
     close(sockfd);
 
 }
-
-/*
-main thread - stuff isnide the while running
-second thread - listening from the server
-  - any public messages or direct messages that people send you
-  */

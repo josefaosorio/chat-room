@@ -77,14 +77,16 @@ int main(int argc, char** argv) {
         exit(1);
 
     client_map = new ClientMap();
+    printf("Accepting connections on port %i\n", port);
 
     while (1) {
-        printf("Waiting for connection...\n");
         if ((newfd = accept_connection(sockfd)) < 0)
             continue;
         ThreadArgs *args = (ThreadArgs*)malloc(sizeof(ThreadArgs));
         args->sock = newfd;
         args->client_map = client_map;
+        
+        // Creates a thread for each new client
         if (pthread_create(&t_id, NULL, connection_handler, (void*)args) < 0) {
             perror("Failed to create thread");
             continue;

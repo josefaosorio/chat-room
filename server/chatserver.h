@@ -62,8 +62,6 @@ struct ThreadArgs {
     ClientMap *client_map;
 };
 
-
-
 /* server set up */
 int socket_bind_listen(int port);
 int accept_connection(int sockfd);
