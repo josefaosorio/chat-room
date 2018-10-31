@@ -120,7 +120,7 @@ void direct_msg(int sockfd, ClientMap* cm) {
 
     // Send public key back to client
     info = cm->get(user);
-    if (send_msg(sockfd, std::string("C"), std::string("dummy"), std::string(info.pubkey)) < 0) {
+    if (send_msg(sockfd, std::string("C"), std::string("dummy"), info.pubkey) < 0) {
         fprintf(stderr, "Failed to send pubkey to client");
         return;
     }
@@ -203,13 +203,13 @@ bool handle_commands(int fd, ClientMap* client_map){
 bool handle_login(int sockfd, ClientMap* client_map) {
     bool user_exist = false;
     bool auth_success;
-    char* pubkey;
     std::fstream user_creds;
     std::string client_username;
     std::string username;
     std::string client_password;
     std::string password;
     std::string reply;
+    std::string pubkey_string;
 
     // Get username
     if (recv_string(sockfd, client_username) < 0) {
@@ -273,15 +273,13 @@ bool handle_login(int sockfd, ClientMap* client_map) {
         return false;
     }
 
-    pubkey = recv_pubkey(sockfd);
-
-    if (pubkey == NULL) {
-        std::cerr << "Server failed to receive pub key" << std::endl;
+    if (recv_string(sockfd, pubkey_string) < 0) {
+        fprintf(stderr, "Failed to receive pubkey string");
         user_creds.close();
         return false;
     }
 
-    ClientInfo info { sockfd, pubkey };
+    ClientInfo info { sockfd, pubkey_string };
     client_map->set_info(client_username, info);
 
     user_creds.close();

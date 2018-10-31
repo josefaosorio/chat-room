@@ -37,11 +37,11 @@
 
 struct ClientInfo{
     int sock;
-    char* pubkey;
+    std::string pubkey;
     bool empty = false;
 
     ClientInfo() {}
-    ClientInfo(int sockfd, char* key) : sock(sockfd), pubkey(key) {}
+    ClientInfo(int sockfd, std::string key) : sock(sockfd), pubkey(key) {}
 };
 
 class ClientMap {
