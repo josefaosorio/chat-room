@@ -24,24 +24,26 @@ bool user_login(int sockfd, std::string username) {
         std::cerr << "Client fails to receive username ACK" << std::endl;
         return false;
     }
-
-    // Get password from user and send to server
     std::cout << buf << std::endl;
 
+    // Get password from user
     std::cout << "Enter password: ";
     std::getline(std::cin, password);
 
+    // Send password to server
     if (send_string(sockfd, password) < 0) {
         std::cerr << "Client fails to send password to server" << std::endl;
         return false;
     }
 
+    // Receives server's acknowledgement
     buf.clear();
     if (recv_string(sockfd, buf) < 0) {
         std::cerr << "Client fails to receive password ACK" << std::endl;
         return false;
     }
 
+    // Checks that acknowledgement is OK
     if (buf.compare("Authentication succeeded")) {
         std::cerr << "Password ACK says failed" << std::endl;
         return false;
@@ -51,7 +53,8 @@ bool user_login(int sockfd, std::string username) {
 
     pubkey = getPubKey();
 
-    if (send_pubkey(sockfd, pubkey) < 0) {
+    // Sends public key to server
+    if (send_string(sockfd, std::string(pubkey)) < 0) {
         std::cerr << "Client fails to send pubkey to server" << std::endl;
         return false;
     }
@@ -66,6 +69,7 @@ void public_message(int sockfd, Queue<std::string> *messages){
     std::string ack_msg;
     std::string msg_to_send;
 
+    // Sends P command to server
     if (send_string(sockfd, "P") < 0) {
         std::cerr << "Client fails to send command to server" << std::endl;
         return;
@@ -79,95 +83,93 @@ void public_message(int sockfd, Queue<std::string> *messages){
     }
     ack_msg.clear();
 
+    // Get message from user
     std::cout << "Enter the public message: ";
     std::getline(std::cin, msg_to_send);
-    std::cout << msg_to_send << std::endl;
 
+    // Send message to server
     if (send_string(sockfd, msg_to_send) < 0) {
         std::cerr << "Client fails to send message to server" << std::endl;
         return;
     }
 
+    // pop acknowledgement from Queue
     ack_msg = messages->pop();
     if (ack_msg.compare("1") != 0) {
         std::cerr << "Acknowledgement not received" << std::endl;
         return;
     }
     ack_msg.clear();
-
-    //how to tell if a user is still connected - if you try to receive something from
-    //a socket that has been closed, it'll return a 0-length message so you can check
-    //for that
 }
 
 void direct_message(int sockfd, Queue<std::string> *messages) {
     std::string user_list_csv;
     std::vector<std::string> user_list;
     std::string peer;
-    const char *pub_key;
+    char *pub_key;
     std::string user_msg;
-    const char *c_user_msg;
+    char *c_user_msg;
     char *encrypted_user_msg;
     std::string msg_ack;
 
-    std::cout << "inside direct_message in client_op" << std::endl;
-
+    // Sends D command to server
     if (send_string(sockfd, "D") < 0) {
         std::cerr << "Client fails to send command to server" << std::endl;
         return;
     }
 
-    std::cout << "after sending D to server in client_op:direct_message" << std::endl;
-
+    // Parse comma separated user list
     user_list_csv = messages->pop();
-    // parse list
     std::stringstream ss(user_list_csv);
     std::string username;
-
-    std::cout << "after popping user list off messages queue in client_op:direct_message" << std::endl;
 
     while (getline(ss, username, ',')) {
         user_list.push_back(username);
     }
 
+    // Display online users
     std::cout << "Peers online:" << std::endl;
     for (auto it: user_list) {
         std::cout << "\t" << it << std::endl;
     }
 
+    // Ask for target user
     std::cout << "\nPeer to message: ";
     getline(std::cin, peer);
 
-    std::cout << "before sending peer to server in client_op" << std::endl;
-
+    // Send target user to server
     if (send_string(sockfd, peer) < 0) {
         std::cerr << "Client fails to send command to server" << std::endl;
         return;
     }
 
-    std::cout << "after sending peer to server in client_op" << std::endl;
+    // Get public key of target user
+    std::string temp = messages->pop();
+    pub_key = (char*)malloc(temp.size() + 1);
+    memcpy(pub_key, temp.c_str(), temp.size());
+    pub_key[temp.size()] = '\0';
 
-    pub_key = messages->pop().c_str();
-
+    // Get message from user
     std::cout << "\nMessage: ";
     getline(std::cin, user_msg);
-    c_user_msg = user_msg.c_str();
-    //std::cout << "pub key: " << pub_key << std::endl;
-    //std::cout << "user message: " << c_user_msg << std::endl;
-    encrypted_user_msg = encrypt((char *)c_user_msg, (char *)pub_key);
+
+    // Encrypt message from user
+    c_user_msg = (char*)malloc(user_msg.size() + 1);
+    memcpy(c_user_msg, user_msg.c_str(), user_msg.size());
+    c_user_msg[user_msg.size()] = '\0';
+
+    encrypted_user_msg = encrypt(c_user_msg, pub_key);
     std::string encrypted_user_msg_str(encrypted_user_msg);
 
-    std::cout << "after popping user message off queue and getting encrypted msg in client_op" << std::endl;
-
+    // Send encrypted message to server
     if (send_string(sockfd, encrypted_user_msg_str) < 0) {
         std::cerr << "Client fails to send encrypted message" << std::endl;
         return;
     }
 
-    std::cout << "after sending encrypted message to server in client_op" << std::endl;
-
+    // Get acknowledgement and check values
     msg_ack = messages->pop();
-    if (msg_ack.compare("0") == 0) { // verify this string decision with Herman
+    if (msg_ack.compare("0") == 0) {
         std::cout << "Sorry, this user is no longer online" << std::endl;
         return;
     }
@@ -176,15 +178,18 @@ void direct_message(int sockfd, Queue<std::string> *messages) {
         return;
     }
     msg_ack.clear();
-
-    std::cout << "after getting ack from popping off queue in client_op" << std::endl;
+    free(pub_key);
+    free(c_user_msg);
 }
 
 void quit(int sockfd){
+    // Sends Q command to server
     if(send_string(sockfd, std::string("Q")) < 0){
         std::cerr << "Client fails to send command to server" << std::endl;
         return;
     }
+
+    std::cout << "Bye!" << std::endl;
 }
 
 void display_broadcast(std::string msg) {
@@ -195,13 +200,11 @@ void display_broadcast(std::string msg) {
 }
 
 void display_direct(std::string sender, std::string msg) {
-    std::cout << "beginning in display_direct msg: " << msg << std::endl;
+    // Decrypts user message and displays to target user
     char* decrypted_msg = decrypt((char*)msg.c_str());
-    std::cout << "decrypted_msg: " << decrypted_msg << std::endl;
     std::string cpp_msg = std::string(decrypted_msg);
     free(decrypted_msg);
-    std::cout << std::endl;
-    std::cout << "*** Incoming message from " << sender << " ***: " << cpp_msg << std::endl;
+    std::cout << "\n*** Incoming message from " << sender << " ***: " << cpp_msg << std::endl;
     std::cout << "> ";
     std::cout.flush();
 }
@@ -221,15 +224,11 @@ void *message_recv_thread(void* args) {
         sender.clear();
         msg.clear();
 
-        //std::cout << "msg_rcv_thrd: before recv string" << std::endl;
-
         // Receive message type
         if (recv_string(sockfd, type) < 0) {
             fprintf(stderr, "Failed to receive message type");
             continue;
         }
-
-        //std::cout << "msg_rcv_thrd: after receiving msg type and before receiving sender" << std::endl;
 
         // Receive sender
         if (recv_string(sockfd, sender) < 0) {
@@ -237,27 +236,23 @@ void *message_recv_thread(void* args) {
             continue;
         }
 
-        //std::cout << "msg_rcv_thrd: after receiving sender" << std::endl;
-
-        // Receive msg
+        // Receive message
         if (recv_string(sockfd, msg) < 0) {
             fprintf(stderr, "Failed to receive message");
             continue;
         }
 
-        //std::cout << "msg_rcv_thrd: after receiving message" << std::endl;
-
+        // Handles acknowledgements and anything that isnt a P or D command
         if (!type.compare("C")){
-            std::cout << "pushing message" << std::endl;
             msg_queue->push(msg);
-          }
+        }
+        // Handles public messages
         else if (!type.compare("P")){
-            std::cout << "inside compare P" << std::endl;
             display_broadcast(msg);
-          }
+        }
+        // Handles direct messages
         else if (!type.compare("D")){
-            std::cout << "inside compare D" << std::endl;
             display_direct(sender, msg);
-          }
+        }
     }
 }
