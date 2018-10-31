@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
 
     // Checck if log in was successfully
     if (!user_login(sockfd, std::string(username))) {
-        std::cout << "failed" << std::endl;
+        std::cout << "Log in failed" << std::endl;
         close(sockfd);
         exit(1);
     }

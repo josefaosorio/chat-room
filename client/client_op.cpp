@@ -43,9 +43,8 @@ bool user_login(int sockfd, std::string username) {
         return false;
     }
 
-    // Checks that acknowledgement is OK
+    // Checks if password input is correct or not
     if (buf.compare("Authentication succeeded")) {
-        std::cerr << "Password ACK says failed" << std::endl;
         return false;
     }
 
